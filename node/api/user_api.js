@@ -1,4 +1,54 @@
-var dao = require('./mongo_mapper');
+
+/*parser***************************************/
+var body_parser = require('body-parser');
+var json_parser = body_parser.json();
+
+//var urlencoded_parser = body_parser.urlencoded({extended: true});
+var user_dao = require('../dao/user_dao_mongo');
+var user_api = Router();
+	
+//preprocessing for all request
+/*
+user_api.use(function timelog(req, res){
+	console.log('Time:' + Date.now());
+	next();
+});
+*/
+
+user_api.post('signup', function(req, res){
+	var username = req.body.username;
+	var password = req.body.password; //TODO: encrypt of password
+	var query_params = {
+		'username': username,
+		'password': password
+	}
+	user_dao.get(query_params, function(err, l_user){
+	});
+});
+
+user_api.post('signin', function(req, res){
+	var username = req.body.username;
+	var password = req.body.password; //TODO: encrypt of password
+	var query_params = {
+		'username': username,
+		'password': password
+	}
+	user_dao.get(query_params, function(err, l_user){
+});
+
+user_api.get('signout', function(req, res){
+	req.session.destroy();
+});
+
+//update profile
+user_api.post('profile', function(req, res){
+	req.body.uid
+	var txt = req.body.descrip;
+});
+
+//get profile
+user_api.get('profile', function(req, res){
+});
 
 module.exports.user = function(req, res){
 	var l_uid = req.body.uid;
@@ -109,3 +159,5 @@ module.exports.user = function(req, res){
 		});
 	}
 }
+
+module.exports = user_api;

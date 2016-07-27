@@ -1,51 +1,53 @@
-//web node based on express
+/*the sciwork web node based on express
+ * framework stack includes:
+ * 1. express
+ * 2. redis session store
+ * 3. redis cache(TODO)
+ * 4. mongodb mongoose
+ * 5. REST api + static + redirect
+ * 6. json parser by body-parser
+ * 7. https (TODO)
+ */
 
-var https = require('https');
-var express = require('express');
+//N.B.: all variables in this script are global 
+//TODO: var https = require('https');
+
+
+/*session***************************************/
 var session = require('express-session');
+
 var redis_store = require('connect-redis')(session); //for session store
 var redis = require('redis'); 
-var redis_cli = redis.createClient({
+var redis_cli_session = redis.createClient({
 	host: '127.0.0.1',
 	port: 6379
-});//redis client
+});//redis sessionstore client
+redis_cli_session.on('error', function(error){
+	console.log(error);
+});
 
-//tools
-var uuid = require('node-uuid');
+/*
+var redis_cli_cache = redis.createClient({
+	host: '127.0.0.1', 
+	port: 6379
+});//redis cache client
 
-var body_parser = require('body-parser');
-var json_parser = body_parser.json();
-var urlencoded_parser = body_parser.urlencoded({extended: true});
+redis_cli_cache.on('error', function(error){
+	console.log(error);
+});
+*/
 
-var uid_check = function(uid){
-	var reg_mobil = new RegExp("^[0-9]*$");			
-	var reg_email = new RegExp("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,4}");
+/*other global settings*********************/
+var session_expire = 3600*1000*24*100; //expire after 100 days
 
-	if (uid == '') {
-		return 0;
-	}
-	else if (reg_email.test(uid)){
-		return 1;
-	}
-	else if (reg_mobil.test(uid)){
-		return 2;
-	}
-	else {
-		return -1;
-	}	
-};
-
-var session_expr= 3600*1000*100;
-
-var mapper = require('./mongo_mapper');
-
+/*express config****************************/
+var express = require('express');
 var app = express();
 
-app.use('/', express.static('public')); //no need to require app.router prior to static router
-
+//session management
 app.use(session({
 	store: new redis_store({
-		client: redis_cli,
+		client: redis_cli_session,
 	}),
 	secret: 'adr1456sbc23b5',
 	resave: false,
@@ -58,7 +60,7 @@ app.use(session({
 	}
 }));
 
-//sequential filter: check if session is disabled
+//session filter: check if session is disabled
 app.use(function(req, res, next){
 	if (!req.session){
 		return next(new Error('session lost'));
@@ -66,24 +68,23 @@ app.use(function(req, res, next){
 	next();
 });
 
+
+//static router
+app.use('/', express.static('public')); //no need to require app.router prior to static router
+
 /*
  * RESTful APIs
- * user operation:
- * /user/signin 
- * /user/signup
- * /user/signout
- * /user/update_profile
- * nut operation:
- * /nut/list/10
- * /nut/create
- * /nut/delete/id
- * /nut/update
- * /nut/order/num
+ * /user
+ * /research
  */
 
-var controller = require('./controller');
-app.post('/user', json_parser, co
-);
+var user_api = require('./api/user_api');
+
+app.use('/user/v1', user);
+
+//use json_parser for all post request
+app.post('/', json_parser);
+
 
 app.get('/signout', function(req, res){
 	req.session.destroy(function(err){
