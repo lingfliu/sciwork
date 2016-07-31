@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://127.0.0.1/sci');
 
+var helper = require('./mongo_helper');
 var Schema = mongoose.Schema;
 
 var user_schema = new Schema({
@@ -21,16 +21,17 @@ var user_schema = new Schema({
 
 var User = mongoose.model('User', user_schema);
 
-module.exports.create_user = function(params, handle){
-	var user = new User(params);
-	user.save(function(err){
-		if (err){
-			return('err');
-		}
-		else {
-			return(user.uid);
-		}
-	});
+module.exports.create_user = function(username, password){
+	var params = {
+		'username': username,
+		'password': password
+	}
+
+	var user = helper.create(user, User);
+	if (user){
+	}
+	else {
+	}
 }
 
 module.exports.find_user = function(params, handle){
