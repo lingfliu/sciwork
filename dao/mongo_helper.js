@@ -22,6 +22,7 @@ var connect = function(db){
     mongoose.connect(_db);
 };
 
+
 var save = function(obj){
     mongoose.save(function (err, func) {
         if (err){
@@ -57,3 +58,5 @@ var update = function(query_params, params, model){
         return count;
     });
 };
+
+module.exports = {'connect':connect, 'create':save, 'find':find, 'remove':remove, 'update':update};
