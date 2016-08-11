@@ -19,7 +19,7 @@ var RedisStore = require("connect-redis")(session);
 var redis = require("redis");
 var redis_cli_session = redis.createClient({
     host:'127.0.0.1',
-    port:6279
+    port:6379
 });
 redis_cli_session.on('error', function(err){
     //TODO: output to log

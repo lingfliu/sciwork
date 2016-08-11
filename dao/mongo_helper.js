@@ -3,60 +3,86 @@
  */
 var mongoose = require('mongoose');
 var mongodb = require('mongodb');
+var Q = require('q');
 
 var _db = '';
 
-var conn = mongoose.connection;
-conn.on('error', function(){
-    setTimeout(function(){
-        mongoose.connect(_db);
-    }, 1000);
-});
-
-conn.once('open', function(){
-   //connected
-});
-
 var connect = function(db){
+    var def = Q.defer();
     _db = db;
     mongoose.connect(_db);
+    var conn = mongoose.connection;
+    conn.on('error', function(){
+        def.reject(new Error('connect'));
+    });
+    conn.on('open', function(){
+        def.resolve();
+    });
+
+    return def.promise;
 };
 
 
-var save = function(obj){
-    mongoose.save(function (err, func) {
+var create = function(obj){
+    var def = Q.defer();
+
+    obj.save(function (err) {
         if (err){
-            return new Error('save');
+            def.reject(new Error('save'));
+        }
+        else {
+            def.resolve();
         }
     });
+
+    return def.promise;
 };
 
 var find = function(params, model){
-    mongoose.find(params, function (err, obj) {
-       if (err){
-           return new Error('find');
-       }
-       return obj;
+    var def = Q.defer();
+
+    // params = {'email': 'lingfeng.liu@gmail.com', 'password':'87656644'};
+    model.findOne(params, function(err, obj){
+        if (err){
+            def.reject(new Error('find'));
+        }
+        else {
+            def.resolve(obj);
+        }
     });
+
+    return def.promise;
 };
 
 var remove = function(params, model){
+    var def = Q.defer();
+
     var ops = {
-        maxTimeMS: 1000,
+        'maxTimeMS': 1000
     };
-    model.findOneAndDelete(params, ops, function (err, res) {
-        if (err) return new Error('remove');
-        return res;
+    model.findOneAndRemove(params, ops, function (err, doc, res) {
+        if (err) {
+            def.reject(new Error('remove'));
+        }
+        else{
+            def.resolve(res);
+        }
     });
+
+    return def.promise;
 };
 
 var update = function(query_params, params, model){
+    var def = Q.defer();
     model.findOneAndUpdate(query_params, params, function (err, count) {
         if (err) {
-            return new Error('update');
+            def.reject(new Error('update'));
         }
-        return count;
+        else {
+            def.resolve(count);
+        }
     });
+    return def.promise;
 };
 
-module.exports = {'connect':connect, 'create':save, 'find':find, 'remove':remove, 'update':update};
+module.exports = {'connect':connect, 'find':find, 'create': create, 'remove':remove, 'update':update};

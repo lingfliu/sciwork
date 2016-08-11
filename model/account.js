@@ -11,5 +11,5 @@ var account_schema = mongoose.Schema({
 });
 var Account = mongoose.model('Account', account_schema);
 
-module.exports = Account;
+module.exports.Account = Account;
 

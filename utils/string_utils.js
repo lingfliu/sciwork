@@ -3,18 +3,20 @@
  */
 
 var format_check = function(str){
-    if (str.equals('')){
+    if (str == ''){
         return 'empty';
     }
+
     reg = {
-        'email': /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+((\.[a-zA-Z0-9_-]{2,3}){1,2})$/,
-        'mobile': /\+[0-9]*/,
+        'email': /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,4}/,
+        'mobile': /^[0-9]*$/,
         'general': /[a-zA-Z0-9_]/
     };
     for (pattern in reg){
-        if (map(pattern).test(str)){
+        if (reg[pattern].test(str)){
             return pattern;
         }
+        // console.log(pattern);
     }
     return 'error';
 }
@@ -24,7 +26,7 @@ var random_string = function(len){
     var range = 94; //printable range
     var str = '';
     for (var i = 0; i < len; i++){
-        str += String.fromCharCode(int(round(Math.random()*94)+32));
+        str += String.fromCharCode(Math.round(Math.random()*range)+base);
     }
     return str;
 }
