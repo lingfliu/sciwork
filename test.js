@@ -11,12 +11,16 @@ var crypto = require('crypto-js');
 
 /*crypto test*/
 var msg = 'message';
+var key = "key";
+var password = '87656644'
+var salt = string_utils.random_string(8);
+
 // var encrypt_msg = crypto.AES.encrypt(msg, config.PASSWORD_SECRET);
 // var decrypt_msg = crypto.AES.decrypt(encrypt_msg.toString(), config.PASSWORD_SECRET);
-var encrypt_msg = crypto.SHA1(msg);
-var decrypt_msg = crypto.SHA1(encrypt_msg);
-var plaintext = decrypt_msg.toString();
-console.log(plaintext);
+var encrypt_password = crypto.SHA1(password+salt);
+var another_password = crypto.SHA1(password+salt);
+console.log(encrypt_password.toString(crypto.enc.Base64));
+console.log(another_password.toString(crypto.enc.Base64));
 
 /*mongodb test*/
 var account_model = require('./model/account');
@@ -42,42 +46,50 @@ mongo_helper.connect(db).then(function(){
 
 var uid;
 
-
 account_dao.find_account_byusername('lingfeng.liu@163.com')
     .then(function(acnt){
         if (acnt) {
-            console.log('taken, removing');
+            console.log('taken, deleting acnt ' + acnt.uid);
             return account_dao.delete_account(acnt.uid)
         }
         else {
-            return 'hello';
+            return;
         }
     })
-    .then(function(){
+    .then(function(uid){
+        if (uid) {
+            console.log('delete account ' + uid)
+        }
         return account_dao.create_account('lingfeng.liu@163.com', '87656644');
     })
     .then(function(uid){
         console.log('created account, uid = ' + uid);
-        this.uid = uid;
-        return account_dao.delete_account(uid);
-    })
-    .then(function(){
-        console.log('removed account: ' + this.uid);
     })
     .catch(function(err){
-        //if not found
         console.log(err);
-        account_dao.create_account('lingfeng.liu@163.com', '87656644')
-            .then(function(uid){
-                console.log('created account, uid = ' + uid);
-                this.uid = uid;
-                return account_dao.delete_account(uid);
-            })
-            .then(function(){
-                console.log('removed account: ' + this.uid);
-            })
-            .catch(function(err){
-                console.log(err);
-            })
-    });
+    })
+    .done();
 
+account_dao.find_account_byusername('lingfeng.liu@163.com')
+    .then(function(acnt){
+        if (!acnt) {
+            throw new Error('nofound');
+        }
+        else {
+            acnt.mobile = '18679823932';
+            var params = {
+                'uid': acnt.uid,
+                'email': acnt.email,
+                'mobile': acnt.mobile,
+                'password': '87656644'
+            }
+            this.uid = acnt.uid;
+            return account_dao.update_account(acnt.uid, '87656644', params);
+        }
+    })
+    .then(function(){
+        console.log('updated account ' + this.uid);
+    })
+    .catch(function(err){
+        console.log(err);
+    });

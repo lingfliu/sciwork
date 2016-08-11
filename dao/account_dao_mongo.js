@@ -30,7 +30,7 @@ var create_account = function(username, password){
             else {
                 var uid = shortid.generate();
                 var secret = config.PASSWORD_SECRET;
-                var params = {'uid': uid, 'password': crypto.AES.encrypt(password, secret).toString()};
+                var params = {'uid': uid, 'password': crypto.SHA1(password+uid).toString(crypto.enc.Base64)};
                 if (name_type == 'email'){
                     params.email = username;
                 }
@@ -58,7 +58,7 @@ var create_account = function(username, password){
 var find_account_byusername = function(username){
     var def = Q.defer();
     var name_type = string_utils.format_check(username);
-    var params;
+    var params = {'email':null,'mobile':null};
     if (name_type == 'email' || name_type == 'mobile') {
         if (name_type == 'email') {
             params = {'email':username};
@@ -83,11 +83,13 @@ var find_account_byusername = function(username){
 var find_account_byemail = function(email){
     var def = Q.defer();
     var params = {'email': email};
-    mongo_helper.find(params, model).then(function(acnt){
-        def.resolve(acnt);
-    }).catch(function (error) {
-        def.reject(new Error('nofound'));
-    });
+    mongo_helper.find(params, model)
+        .then(function(acnt){
+            def.resolve(acnt);
+        })
+        .catch(function (error) {
+            def.reject(new Error('nofound'));
+        });
 
     return def.promise;
 }
@@ -95,11 +97,13 @@ var find_account_byemail = function(email){
 var find_account_bymobile = function(mobile){
     var def = Q.defer();
     var params = {'mobile': email};
-    mongo_helper.find(params, model).then(function(acnt){
-        def.resolve(acnt);
-    }).catch(function (error) {
-        def.reject(new Error('nofound'));
-    });
+    mongo_helper.find(params, model)
+        .then(function(acnt){
+            def.resolve(acnt);
+        })
+        .catch(function (error) {
+            def.reject(new Error('nofound'));
+        });
 
     return def.promise;
 }
@@ -120,27 +124,35 @@ var update_account = function(uid, password, params){
     var def = Q.defer();
 
     var query_params = {'uid':uid};
-    mongo_helper.find(query_params, model).then(function(acnt){
-    }).catch(function (err) {
-        def.reject(new Error('nofound'));
-    });
 
-    if (account){
-        if (params.email){
-            account.email = params.email;
-        }
-        if (params.mobile){
-            account.mobile = params.mobile;
-        }
-        if (params.password) {
-            account.password = crypto.AES.encrypt(params.password, config.PASSWORD_SECRET).toString();
-        }
-        mongo_helper.save(account);
-        def.resolve(uid);
-    }
-    else {
-        def.reject(Error('nofound'));
-    }
+    mongo_helper.find(query_params, model)
+        .then(function(acnt){
+            if (!acnt) {
+                def.reject(new Error('nofound'));
+            }
+            else {
+                //first validate the password
+                console.log('in ' + crypto.SHA1(password+acnt.uid).toString(crypto.enc.Base64))
+                console.log('out ' + acnt.password);
+
+                if (params.email){
+                    acnt.email = params.email;
+                }
+                if (params.mobile){
+                    acnt.mobile = params.mobile;
+                }
+                if (params.password) {
+                    acnt.password = crypto.SHA1(params.password+acnt.uid).toString(crypto.enc.Base64);
+                }
+                return mongo_helper.create(acnt)
+            }
+        })
+        .then(function(uid){
+            def.resolve();
+        })
+        .catch(function (err) {
+            def.reject(err);
+        });
 
     return def.promise;
 }
@@ -149,7 +161,7 @@ var delete_account = function(uid){
     var def = Q.defer();
     var params = {'uid':uid};
     mongo_helper.remove(params, model).then(function(){
-        def.resolve();
+        def.resolve(uid);
     }).catch(function(err){
         def.reject(err);
     });
