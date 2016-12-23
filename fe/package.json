@@ -1,0 +1,24 @@
+{
+  "name": "sciwork-fe",
+  "version": "1.0.0",
+  "description": "frontend of sciwork",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "test_html": "webpack-dev-server --port 8000 --inline --content-base ./fe/src",
+    "dev": "webpack-dev-server --port 8000 --inline --content-base ./build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "lingfliu",
+  "license": "MIT",
+
+  "devDependencies": {
+    "babel-loader": "^6.2.8",
+    "babel-preset-react": "^6.16.0",
+    "gulp": "^3.9.1",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "webpack": "^1.13.3",
+    "webpack-dev-server": "^1.16.2"
+  }
+}
